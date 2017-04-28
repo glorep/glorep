@@ -855,6 +855,7 @@ if ($form_state['values']['Structure']=='atomic')
  */
 function linkableobject_insert($node)
 {
+	$my_fed = variable_get('site_name','');
 	$lobj_tfuid=variable_get('collabrep_federation_name', 'NOFEDERATION').' '.variable_get('collabrep_my_name', substr(preg_replace('[^A-Za-z0-9]','',variable_get('site_name', "")),0,20)).' '.$node->nid;
 	//#################### LO_General ####################
 	db_insert('LO_General')
@@ -1004,7 +1005,7 @@ function linkableobject_insert($node)
 				$filesize=$row["filesize"];
 				drupal_set_message("NOME ".$filename);
 				$url= file_create_url($uri);
-				$res2=db_query("INSERT INTO LO_File (Id_Fd,url,filename,filesize,filemime) VALUES ('$lobj_tfuid','$url','$filename','$filesize','$filemime')");
+				$res2=db_query("INSERT INTO LO_File (Id_Lo,Id_Fd,url,filename,filesize,filemime) VALUES ($node->nid,'$lobj_tfuid','$url','$filename','$filesize','$filemime')");
 			}
 			variable_set('test','');
 }
