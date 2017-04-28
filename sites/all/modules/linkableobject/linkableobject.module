@@ -855,8 +855,8 @@ if ($form_state['values']['Structure']=='atomic')
  */
 function linkableobject_insert($node)
 {
-	$my_fed = variable_get('site_name','');
-	$lobj_tfuid=variable_get('collabrep_federation_name', 'NOFEDERATION').' '.variable_get('collabrep_my_name', substr(preg_replace('[^A-Za-z0-9]','',variable_get('site_name', "")),0,20)).' '.$node->nid;
+	//$lobj_tfuid=variable_get('collabrep_federation_name', 'NOFEDERATION').' '.variable_get('collabrep_my_name', substr(preg_replace('[^A-Za-z0-9]','',variable_get('site_name', "")),0,20)).' '.$node->nid;
+	$lobj_tfuid=variable_get('site_name', "");
 	//#################### LO_General ####################
 	db_insert('LO_General')
 		->fields(array(
