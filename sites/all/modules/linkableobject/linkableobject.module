@@ -1332,8 +1332,8 @@ function linkableobject_view($node,$view_mode)
 	{
   		if($view_mode != 'teaser')		//	or if($view_mode == 'full')
 		{
-			
-			
+
+
 			if(isset($_SESSION["structure"])){
 				unset($_SESSION["structure"]);
 			}
@@ -1476,7 +1476,7 @@ function theme_linkableobject_general($node_id){
 
 			$output =$output.'<b>Structure :</b> '.check_plain($show_info->Structure).'<br/>' ;
 	}
-	
+
 	return $output;
 }
 function theme_linkableobject_lifecycle($node_id){
@@ -1575,16 +1575,26 @@ function theme_linkableobject_rights($node_id){
  *
  */
 function theme_linkableobject_file_list($node) {
-	$res =db_query("SELECT fid  FROM file_usage WHERE id =:nid", array(':nid' => $node->nid));
-	$fid = $res->fetchColumn(0);
+	$tmp = db_query("select nid,vid,Id_Fd from {node} where nid=:node_id",array(':node_id'=>$node->nid))->fetchObject();
+	$file = db_query("select filename,filesize from LO_File where Id_Lo = :node_id and Id_Fd = :fed_name",array("node_id"=>$tmp->nid,"fed_name"=>$tmp->Id_Fd))->fetchObject();
+	if($file){
+		$output = '<h3><li>attachment: '.$file->filename.' ('.(int)($file->filesize/1024) .'kB)</li></h3>';
+		return $output.'<br />';
+	}else{
+		return '';
+	}
+
+
+	/*$res =db_query("SELECT fid  FROM file_usage WHERE id =:nid", array(':nid' => $node->nid));
+	$fid = $res->fetchColumn(0);*/
 	//drupal_set_message("FILE fid: ".$fid,'warning');
-	if ($fid)
+	/*if ($fid)
 	{
 		$file=file_load($fid);
-$id_fdq= db_query("SELECT Id_Fd FROM LO_General WHERE Id_Lo='$node->nid'");
-	$id_fd=$id_fdq->fetchColumn(0);
-$filesizeq= db_query("SELECT filesize FROM LO_File WHERE Id_Fd='$id_fd'");
-	$filesize=$filesizeq->fetchColumn(0);
+		$id_fdq= db_query("SELECT Id_Fd FROM LO_General WHERE Id_Lo='$node->nid'");
+		$id_fd=$id_fdq->fetchColumn(0);
+		$filesizeq= db_query("SELECT filesize FROM LO_File WHERE Id_Fd='$id_fd'");
+		$filesize=$filesizeq->fetchColumn(0);
 		$output = '<h3><li>'.'attachment: '.$file->filename.' ('.(int)($filesize/1024) .'kB)'.'</li></h3>';
 		return $output.'</br>';
 	}
@@ -1592,7 +1602,7 @@ $filesizeq= db_query("SELECT filesize FROM LO_File WHERE Id_Fd='$id_fd'");
 	{
 		$output = ' ';
 		return $output;
-	}
+	}*/
 }
 
 function theme_linkableobject_show_Id_Fd($Id_Fd)
@@ -1621,4 +1631,3 @@ function _linkableobject_download_form($form, &$form_state, $nid)
 	return $form;
 	}
 }
-
