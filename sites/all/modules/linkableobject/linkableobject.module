@@ -1367,7 +1367,7 @@ function linkableobject_view($node,$view_mode)
 				'#markup' => theme_linkableobject_lifecycle($node->nid),
 				'#suffix' => '</div>'
 			);
-			$check_tech = db_query('SELECT Format FROM {LO_Technical} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->vid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
+			$check_tech = db_query('SELECT Format FROM {LO_Technical} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->nid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
 			if(isset($check_tech->Format)){
 				$node->content['LO_TECHNICAL'] = array(
 					'#type' =>'fieldset',
@@ -1407,7 +1407,7 @@ function linkableobject_view($node,$view_mode)
 				'#suffix' => '</div>'
 			);
 			if(user_access('create or edit own linkableobject')){
-				$res= db_query("SELECT url,filename,filemime FROM LO_File WHERE Id_Fd='$tmp->Id_Fd' and Id_LO = $tmp->vid");
+				$res= db_query("SELECT url,filename,filemime FROM LO_File WHERE Id_Fd='$tmp->Id_Fd' and Id_LO = $tmp->nid");
 				$row= $res->fetch(PDO::FETCH_ASSOC);
 				$url= $row["url"];
 				if(isset($url)){
@@ -1426,7 +1426,7 @@ function linkableobject_view($node,$view_mode)
 				unset($_SESSION["structure"]);
 			}
 			if(user_access('create or edit own linkableobject')){
-				$res= db_query("SELECT url,filename,filemime FROM LO_File WHERE Id_Fd='$tmp->Id_Fd' and Id_Lo=$tmp->vid");
+				$res= db_query("SELECT url,filename,filemime FROM LO_File WHERE Id_Fd='$tmp->Id_Fd' and Id_Lo=$tmp->nid");
 				$row= $res->fetch(PDO::FETCH_ASSOC);
 				$url= $row["url"];
 				if(isset($url)){
@@ -1458,8 +1458,8 @@ function theme_linkableobject_general($node_id){
 	$output = '';
 	if (isset($node_id)) {
 	$tmp = db_query("select nid,vid,Id_Fd from {node} where nid=:node_id",array(':node_id'=>$node_id))->fetchObject();
-	$show_info = db_query('SELECT Title,Description,Language,Keyword,Coverage,Structure FROM {LO_General} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->vid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
-	$show_info2= db_query('SELECT Entity FROM {LO_Contribute} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->vid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
+	$show_info = db_query('SELECT Title,Description,Language,Keyword,Coverage,Structure FROM {LO_General} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->nid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
+	$show_info2= db_query('SELECT Entity FROM {LO_Contribute} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->nid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
 		$output = '<b>Title:</b> '.check_plain($show_info->Title).'<br/>' ;
 		if ($show_info->Description!=''){
 			$output = $output.'<b>Description :</b> '.check_plain($show_info->Description).'<br/>' ;
@@ -1483,7 +1483,7 @@ function theme_linkableobject_lifecycle($node_id){
 	$output = '';
 	if (isset($node_id)) {
 		$tmp = db_query("select nid,vid,Id_Fd from {node} where nid=:node_id",array(':node_id'=>$node_id))->fetchObject();
-		$show_info = db_query('SELECT Status,Version FROM {LO_LifeCycle} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->vid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
+		$show_info = db_query('SELECT Status,Version FROM {LO_LifeCycle} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->nid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
 			if($show_info->Version!=''){
 				$output = '<b>Version :</b> '.check_plain($show_info->Version).'<br/>' ;
 			}
@@ -1495,7 +1495,7 @@ function theme_linkableobject_technical($node_id){
 	$output = '';
 	if (isset($node_id)) {
 	$tmp = db_query("select nid,vid,Id_Fd from {node} where nid=:node_id",array(':node_id'=>$node_id))->fetchObject();
-	$show_info = db_query('SELECT Format,Size,Location,InstallationRemarks,OtherPlatformRequirements,Duration FROM {LO_Technical} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->vid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
+	$show_info = db_query('SELECT Format,Size,Location,InstallationRemarks,OtherPlatformRequirements,Duration FROM {LO_Technical} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->nid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
 	if(isset($show_info->Format)){
 			$output = '<b>Format :</b> '.check_plain($show_info->Format).'<br/>' ;
 		if ($show_info->InstallationRemarks!=''){
@@ -1521,7 +1521,7 @@ function theme_linkableobject_educational($node_id){
 	$output = '';
 	if (isset($node_id)) {
 		$tmp = db_query("select nid,vid,Id_Fd from {node} where nid=:node_id",array(':node_id'=>$node_id))->fetchObject();
-		$show_info = db_query('SELECT InteractivityType,LearningResourceType,InteractivityLevel,SemanticDensity,IntendedEndUserRole,Context,TypicalAgeRange,edu_Description,edu_Language FROM {LO_Educational} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->vid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
+		$show_info = db_query('SELECT InteractivityType,LearningResourceType,InteractivityLevel,SemanticDensity,IntendedEndUserRole,Context,TypicalAgeRange,edu_Description,edu_Language FROM {LO_Educational} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->nid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
 			if ($show_info->InteractivityType!=''){
 				$output = $output.'<b>Interactivity Type :</b> '.check_plain($show_info->InteractivityType).'<br/>' ;
 			}
@@ -1556,7 +1556,7 @@ function theme_linkableobject_rights($node_id){
 	$output = '';
 	if (isset($node_id)) {
 		$tmp = db_query("select nid,vid,Id_Fd from {node} where nid=:node_id",array(':node_id'=>$node_id))->fetchObject();
-		$show_info = db_query('SELECT Cost,Copyright,rights_Description FROM {LO_Rights} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->vid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
+		$show_info = db_query('SELECT Cost,Copyright,rights_Description FROM {LO_Rights} WHERE Id_Lo=:remote_id and Id_fd=:my_fed',array(':remote_id'=>$tmp->nid,':my_fed'=>$tmp->Id_Fd))->fetchObject();
 			if ($show_info->Cost!=''){
 				$output = $output.'<b>Cost :</b> '.check_plain($show_info->Cost).'<br/>' ;
 			}
@@ -1576,7 +1576,7 @@ function theme_linkableobject_rights($node_id){
  */
 function theme_linkableobject_file_list($node) {
 	$tmp = db_query("select nid,vid,Id_Fd from {node} where nid=:node_id",array(':node_id'=>$node->nid))->fetchObject();
-	$file = db_query("select filename,filesize from LO_File where Id_Lo = :remote_id and Id_Fd = :my_fed",array(":remote_id"=>$tmp->vid,":my_fed"=>$tmp->Id_Fd))->fetchObject();
+	$file = db_query("select filename,filesize from LO_File where Id_Lo = :remote_id and Id_Fd = :my_fed",array(":remote_id"=>$tmp->nid,":my_fed"=>$tmp->Id_Fd))->fetchObject();
 	if($file){
 		$output = '<h3><li>attachment: '.$file->filename.' ('.(int)($file->filesize/1024) .'kB)</li></h3>';
 		return $output.'<br />';
