@@ -84,14 +84,16 @@ function linkableobject_menu()
 }
 function linkableobject_download_fired($nid)
 {
+	$tmp=db_query("select vid,Id_Fd from {node} where nid=:node_id",array(":node_id"=>$nid))->fetchObject();
 	$lobj_tfuid=variable_get('collabrep_federation_name', 'NOFEDERATION').' '.variable_get('collabrep_my_name', substr(preg_replace('[^A-Za-z0-9]','',variable_get('site_name', "")),0,20)).' '.$nid;
 	#$res =db_query("SELECT fid  FROM file_usage WHERE id =:nid", array(':nid' => $nid));
 	#$fid = $res->fetchColumn(0);
 	#$file=file_load($fid);
 	#drupal_set_message ('download file - --> '.$file->filename.' -','warning');
 	#if($file) {
-	$id_fdq= db_query("SELECT Id_Fd FROM LO_General WHERE Id_Lo='$nid'");
-	$id_fd=$id_fdq->fetchColumn(0);
+	//$id_fdq= db_query("SELECT Id_Fd FROM LO_General WHERE Id_Lo=$tmp->vid");
+	//$id_fd=$id_fdq->fetchColumn(0);
+	$id_fd=$tmp->Id_Fd;
 	$res= db_query("SELECT url,filename,filemime FROM LO_File WHERE Id_Fd='$id_fd'");
 	$row= $res->fetch(PDO::FETCH_ASSOC);
 	$url= $row["url"];
@@ -856,11 +858,14 @@ if ($form_state['values']['Structure']=='atomic')
 function linkableobject_insert($node)
 {
 	//$lobj_tfuid=variable_get('collabrep_federation_name', 'NOFEDERATION').' '.variable_get('collabrep_my_name', substr(preg_replace('[^A-Za-z0-9]','',variable_get('site_name', "")),0,20)).' '.$node->nid;
-	$lobj_tfuid=variable_get('site_name', "");
+	//$lobj_tfuid=variable_get('site_name', "");
+	$tmp=db_query("select vid,Id_Fd from {node} where nid=:node_id",array(":node_id"=>$node->nid))->fetchObject();
+	$lobj_tfuid=$tmp->Id_Fd;
 	//#################### LO_General ####################
 	db_insert('LO_General')
 		->fields(array(
-				'Id_Lo' => $node->nid,
+				'id' => $node->nid,
+				'Id_Lo' => $node->vid,
 				'Id_Fd' => $lobj_tfuid,
 				'Title' => $node->title,
 				'Description' => $node->Description,
@@ -877,7 +882,7 @@ function linkableobject_insert($node)
 	//#################### LO_Lifecycle ####################
 	db_insert('LO_LifeCycle')
 		->fields(array(
-			'Id_Lo' => $node->nid,
+			'Id_Lo' => $node->vid,
 			'Id_Fd' => $lobj_tfuid,
 			'Version' => $node->Version,
 			'Status' => $node->Status,
@@ -892,7 +897,7 @@ function linkableobject_insert($node)
 	{
 		db_insert('LO_Technical')
 			->fields(array(
-					'Id_Lo' => $node->nid,
+					'Id_Lo' => $node->vid,
 					'Id_Fd' => $lobj_tfuid,
 					'Format'=>$node->Format,
 					'InstallationRemarks' => $node->InstallationRemarks,
@@ -907,7 +912,7 @@ function linkableobject_insert($node)
 	//#################### LO_Educational ####################
 	db_insert('LO_Educational')
 		->fields(array(
-				'Id_Lo' => $node->nid,
+				'Id_Lo' => $node->vid,
 				'Id_Fd' => $lobj_tfuid,
 				'InteractivityType' => $node->InteractivityType,
 				'LearningResourceType' => $node->LearningResourceType,
@@ -927,7 +932,7 @@ function linkableobject_insert($node)
 		//#################### LO_Rights ####################
 		db_insert('LO_Rights')
 			->fields(array(
-				'Id_Lo' => $node->nid,
+				'Id_Lo' => $node->vid,
 				'Id_Fd' => $lobj_tfuid,
 				'Cost' => $node->Cost,
 				'Copyright' => $node->Copyright,
@@ -940,7 +945,7 @@ function linkableobject_insert($node)
 		$metadata_schema='LOMv1.0';
 		db_insert('LO_Metadata')
 			->fields(array(
-				'Id_Lo' => $node->nid,
+				'Id_Lo' => $node->vid,
 				'Id_Fd' => $lobj_tfuid,
 				'MetadataSchema' => $metadata_schema,
 				'Language' => 'en',
@@ -953,7 +958,7 @@ function linkableobject_insert($node)
 		$date=date("Y-d-m H:i:s" ,time());
 		db_insert('LO_Contribute')
 			->fields(array(
-				'Id_Lo' => $node->nid,
+				'Id_Lo' => $node->vid,
 				'Id_Fd' => $lobj_tfuid,
 				'Role' => $role,
 				'Entity' => $node->Entity,
@@ -968,7 +973,7 @@ function linkableobject_insert($node)
 			if(!empty($_POST[$var])){
 				db_insert('LO_category')
 				->fields(array(
-					'Id_LO'=>$node->nid,
+					'Id_LO'=>$node->vid,
 					'Categoria_LO'=>$_POST[$var],
 					'Id_Fd'=>$lobj_tfuid,
 				))
@@ -976,7 +981,7 @@ function linkableobject_insert($node)
 			}elseif(!empty($_POST[$var2])){
 				db_insert('LO_category')
 				->fields(array(
-					'Id_LO'=>$node->nid,
+					'Id_LO'=>$node->vid,
 					'Categoria_LO'=>$_POST[$var2],
 					'Id_Fd'=>$lobj_tfuid,
 				))
@@ -1005,7 +1010,7 @@ function linkableobject_insert($node)
 				$filesize=$row["filesize"];
 				drupal_set_message("NOME ".$filename);
 				$url= file_create_url($uri);
-				$res2=db_query("INSERT INTO LO_File (Id_Lo,Id_Fd,url,filename,filesize,filemime) VALUES ($node->nid,'$lobj_tfuid','$url','$filename','$filesize','$filemime')");
+				$res2=db_query("INSERT INTO LO_File (Id_Lo,Id_Fd,url,filename,filesize,filemime) VALUES ($node->vid,'$lobj_tfuid','$url','$filename','$filesize','$filemime')");
 			}
 			variable_set('test','');
 }
@@ -1013,7 +1018,7 @@ function linkableobject_insert($node)
 function linkableobject_update($node)
 {
 	$lobj_tfuid=variable_get('collabrep_federation_name', 'NOFEDERATION').' '.variable_get('collabrep_my_name', substr(preg_replace('[^A-Za-z0-9]','',variable_get('site_name', "")),0,20)).' '.$node->nid;
-
+	$tmp=db_query("select vid,Id_Fd from {node} where nid=:node_id",array(":node_id"=>$node->nid))->fetchObject();
 	//Updating LO_General
 	db_update('LO_General')
 		->fields(array(
@@ -1028,7 +1033,8 @@ function linkableobject_update($node)
 					'TimeUpd' => $node->changed,
 				)
 			)
-		->condition('Id_Lo',$node->nid)
+		->condition('Id_Fd',$tmp->Id_Fd)
+		->condition('Id_Lo',$node->vid)
 		->execute();
 
 		//#################### Taxonomy ####################
@@ -1042,16 +1048,18 @@ function linkableobject_update($node)
 					'Categoria_LO'=>$_POST[$var],
 					'Id_Fd'=>$lobj_tfuid,
 				))
-				->condition('Id_Lo',$node->nid)
+				->condition('Id_Fd',$tmp->Id_Fd)
+				->condition('Id_Lo',$node->vid)
 				->execute();
 			}elseif(!empty($_POST[$var2])){
 				db_update('LO_category')
 				->fields(array(
-					'Id_LO'=>$node->nid,
+					'Id_LO'=>$node->vid,
 					'Categoria_LO'=>$_POST[$var2],
 					'Id_Fd'=>$lobj_tfuid,
 				))
-				->condition('Id_Lo',$node->nid)
+				->condition('Id_Fd',$tmp->Id_Fd)
+				->condition('Id_Lo',$node->vid)
 				->execute();
 			}
 
@@ -1062,7 +1070,8 @@ function linkableobject_update($node)
 		'Status' => $node->Status,
 		)
 	)
-	->condition('Id_Lo',$node->nid)
+	->condition('Id_Fd',$tmp->Id_Fd)
+	->condition('Id_Lo',$node->vid)
 	->execute();
 
 	//#################### LO_Technical ####################
@@ -1078,7 +1087,8 @@ function linkableobject_update($node)
 					'Location'=>$node->Location,
 				)
 			)
-		->condition('Id_Lo',$node->nid)
+		->condition('Id_Fd',$tmp->Id_Fd)
+		->condition('Id_Lo',$node->vid)
 		->execute();
 		global $file;
 		//drupal_set_message("INS File id ".t($file->fid).' - nid '.$node->nid,'warning');
@@ -1147,7 +1157,8 @@ function linkableobject_update($node)
 					'edu_Language' => $node->edu_Language,
 				)
 			)
-		->condition('Id_Lo',$node->nid)
+		->condition('Id_Fd',$tmp->Id_Fd)
+		->condition('Id_Lo',$node->vid)
 		->execute();
 
 	//#################### LO_Rights ####################
@@ -1158,7 +1169,8 @@ function linkableobject_update($node)
 				'rights_Description' => $node->rights_Description,
 			)
 		)
-		->condition('Id_Lo',$node->nid)
+		->condition('Id_Fd',$tmp->Id_Fd)
+		->condition('Id_Lo',$node->vid)
 		->execute();
 
 	//#################### LO_Contribute ####################
@@ -1171,7 +1183,8 @@ function linkableobject_update($node)
 				'Date' => $date,
 			)
 		)
-		->condition('Id_Lo',$node->nid)
+		->condition('Id_Fd',$tmp->Id_Fd)
+		->condition('Id_Lo',$node->vid)
 		->execute();
 	//Updating file
 	//$res =db_query("SELECT fid  FROM file_managed WHERE uri =:uri", array(':uri' => 'temporary:*'));
@@ -1202,30 +1215,31 @@ function linkableobject_delete($node)
 	global $file;
 	$res =db_query("SELECT fid FROM file_usage WHERE id =:nid", array(':nid' => $node->nid));
 	$fid = $res->fetchColumn(0);
+	$tmp=db_query("select Id_Fd from {node} where nid=:node_id",array(":node_id"=>$node->nid))->fetchObject();
 	if (!empty($fid)){
-		db_delete('LO_General')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_LifeCycle')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_Technical')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_Educational')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_Rights')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_Contribute')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_Metadata')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_File')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_category')->condition('Id_Fd',$node->Id_Fd)->execute();// last added think to add that
+		db_delete('LO_General')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_LifeCycle')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_Technical')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_Educational')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_Rights')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_Contribute')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_Metadata')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_File')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_category')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();// last added think to add that
 		$file = file_load($fid);
 		drupal_set_message("DEL fid ".t($fid).' - nid '.t($node->nid).' - file fid '.t($file->fid),'warning');
 		file_usage_delete($file, "file", "node",$node->nid, 0);
 		file_delete($file, $force = TRUE);
 	}
 	else {
-		db_delete('LO_General')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_LifeCycle')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_Technical')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_Educational')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_Rights')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_Contribute')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_Metadata')->condition('Id_Fd',$node->Id_Fd)->execute();
-		db_delete('LO_File')->condition('Id_Fd',$node->Id_Fd)->execute();
+		db_delete('LO_General')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_LifeCycle')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_Technical')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_Educational')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_Rights')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_Contribute')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_Metadata')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
+		db_delete('LO_File')->condition('Id_Fd',$tmp->Id_Fd)->condition('Id_Lo',$node->vid)->execute();
 		drupal_set_message("DEL nid ".t($node->nid),'warning');
 	}
 }
@@ -1237,14 +1251,15 @@ function linkableobject_delete($node)
  */
 function linkableobject_load($nodes)
 {
+
 	$query = db_select('LO_General','node');
-		$query->leftjoin('LO_LifeCycle','LifeCycle','node.Id_Lo=LifeCycle.Id_Lo',null);
-		$query->leftjoin('LO_Educational','Educational','node.Id_Lo=Educational.Id_Lo',null);
-		$query->leftjoin('LO_Technical','Technical','node.Id_Lo=Technical.Id_Lo',null);
-		$query->leftjoin('LO_Rights','Rights','node.Id_Lo=Rights.Id_Lo',null);
-		$query->leftjoin('LO_Contribute','Contribute','node.Id_Lo=Contribute.Id_Lo',null);
-		$query->leftjoin('file_usage','file_u','node.Id_Lo=file_u.id',null);
-		$query->leftjoin('LO_category','Category','node.Id_Lo=Category.Id_LO',null);
+		$query->leftjoin('LO_LifeCycle','LifeCycle','(node.Id_Lo=LifeCycle.Id_Lo and node.Id_Fd=LifeCycle.Id_Fd)',null);
+		$query->leftjoin('LO_Educational','Educational','(node.Id_Lo=Educational.Id_Lo and node.Id_Fd=Educational.Id_Fd)',null);
+		$query->leftjoin('LO_Technical','Technical','(node.Id_Lo=Technical.Id_Lo and node.Id_Fd=Technical.Id_Fd)',null);
+		$query->leftjoin('LO_Rights','Rights','(node.Id_Lo=Rights.Id_Lo and node.Id_Fd=Rights.Id_Fd)',null);
+		$query->leftjoin('LO_Contribute','Contribute','(node.Id_Lo=Contribute.Id_Lo and node.Id_Fd=Contribute.Id_Fd)',null);
+		$query->leftjoin('file_usage','file_u','(node.Id_Lo=file_u.id and node.id = file_u.id)',null);
+		$query->leftjoin('LO_category','Category','(node.Id_Lo=Category.Id_LO and node.Id_Fd and Category.Id_Fd)',null);
 
 		$query->addField('node','Id_Lo','nid');
 		$query->addField('node','Id_Fd');
