@@ -1430,7 +1430,7 @@ function linkableobject_view($node,$view_mode)
 					$node->content['download_trigger'] = array(
 						'#markup'=>'<form action="'.$url.'">
 
-							<button type="submit" style="background-color: #e7e7e7; color: black;font-size: 20px; border-radius: 12px;padding: 9px 20px;" value="Download">Download</button>
+							<input type="submit" border-radius: 12px;padding: 9px 20px;" value="Download" />
 												</form>',
 						'#weight' => 0.002
 					);
@@ -1453,7 +1453,7 @@ function linkableobject_view($node,$view_mode)
 				if(isset($url) && $item->status != "unavailable"  && $item->status != "draft"){
 				$node->content['download_trigger'] = array(
 					'#markup'=>'<form action="'.$url.'">
-						<button type="submit" style="background-color: #e7e7e7; color: black;font-size: 15px; border-radius: 12px;padding: 5px 12px" value="Download">Download</button>
+						<input type="submit" border-radius: 12px;padding: 9px 20px;" value="Download" />
 											</form>',
 					'#weight' => 0.002
 				);
