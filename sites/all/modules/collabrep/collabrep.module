@@ -216,15 +216,33 @@ function collabrep_create_or_join_federation()
 {
 	$form = array();
 
-	variable_set('collabrep_federation_status','0');
-	$form['form'] = array(
+	$form['federate_hostname'] = array(
 		'#type' => 'textfield',
-		'#style' => 'display: none',
-		'#name' => 'test_name',
-		'#title' => t('Shared DB URL'),
-		'#default_value' => variable_get('collabrep_db_url', ''),
+		'#name' => 'federate_hostname',
+		'#title' => t('Federate hostname'),
+		'#default_value' => t(''),
 		'#size' => 100,
-		'#description' => "<button>Hello world</button>",
+		'#description' => "",
+		'#required' => true
+	);
+
+	$form['federate_address'] = array(
+		'#type' => 'textfield',
+		'#name' => 'federate_address',
+		'#title' => t('Federate address'),
+		'#default_value' => t(''),
+		'#size' => 100,
+		'#description' => "",
+		'#required' => true
+	);
+
+	$form['delete_federate'] = array(
+		'#type' => 'checkbox',
+		'#name' => 'federate_delete',
+		'#title' => t('Delete federate'),
+		'#default_value' => t(''),
+		'#size' => 100,
+		'#description' => "",
 		'#required' => false
 	);
 
@@ -233,5 +251,40 @@ function collabrep_create_or_join_federation()
 
 function collabrep_create_or_join_federation_validate($form, &$form_state)
 {
-	
+	//echo $_POST["name"];
+	$name=(isset($_POST["federate_hostname"])?$_POST["federate_hostname"]:null);
+	$indirizzo=(isset($_POST["federate_address"])?$_POST["federate_address"]:null);
+	$delete=(isset($_POST["federate_delete"])?$_POST["federate_delete"]:null);
+
+	$con=mysqli_connect("localhost", "root","root", "dbunipg") or die ("errore connessione");
+
+	//Controllo se nome o indirizzo del federato sono già esistenti nel database e informo l'utente
+	$query1 = "SELECT * FROM `lo_federation` WHERE ServerName='" . $name . "'";
+	$query2= "SELECT * FROM `lo_federation` WHERE ServerAddress ='" . $indirizzo . "'";
+	$result1 = mysqli_query($con, $query1);
+	$result2= mysqli_query($con, $query2);
+	$row1 = mysqli_num_rows($result1);
+	$row2= mysqli_num_rows($result2);
+
+	if($row1>0)
+		echo "Nome già registrato,cambiare nome";
+	else{
+		if($row2>0)
+			echo "indirizzo già registrato,cabiare indirizzo";
+		else{
+			//nel caso nome o indirizzo non sono presenti,inserisco nel database il federato.
+			$query = "SELECT * FROM `lo_federation` WHERE ServerName='" . $name . "' and ServerAddress ='" . $indirizzo . "'";
+			$result = mysqli_query($con, $query);
+
+			/*if($row = mysqli_num_rows($result) != 0)
+			echo "Federato già registrato" ;
+
+			else{*/
+
+			$query="INSERT INTO `lo_federation`(`ServerName`, `ServerAddress`) VALUES (\"$name\",\"$indirizzo\")";
+			$res=mysqli_query($con,$query);
+			echo "Registrazione effettuata con successo $name ";
+			mysqli_close($con);
+		}
+	}
 }
