@@ -191,9 +191,9 @@ function collabrep_menu()
 			'access arguments' => array('collabrep edit settings'),
 			'type' => MENU_NORMAL_ITEM,
 		);
-		$items['admin/settings/collabrep/Create-join'] = array(
-			'title' => 'Create/Join Federation',
-			'description' => 'Create or join Federation',
+		$items['admin/settings/collabrep/Management'] = array(
+			'title' => 'Federation management',
+			'description' => 'Manage Federation',
 			'page callback' => 'drupal_get_form',
 			'page arguments' => array('collabrep_create_or_join_federation'),
 			'access arguments' => array('collabrep edit settings'),
@@ -205,86 +205,161 @@ function collabrep_menu()
 function federation_management()
 {
 
-	drupal_goto('admin/settings/collabrep/Create-join');
+	drupal_goto('admin/settings/collabrep/Management');
 	$form = array();
 
 	return system_settings_form($form);
 }
 
 
-function collabrep_create_or_join_federation()
-{
+function collabrep_create_or_join_federation(){
 	$form = array();
+	$gsio_location=variable_get("gsio_location",null);
+	$need_to_set=variable_get("need_to_set",null);
 
-	$form['federate_hostname'] = array(
-		'#type' => 'textfield',
-		'#name' => 'federate_hostname',
-		'#title' => t('Federate hostname'),
-		'#default_value' => t(''),
-		'#size' => 100,
-		'#description' => "",
-		'#required' => true
-	);
+	if(!is_null($need_to_set) && $need_to_set != true){
+		$contents=file_get_contents("$gsio_location/settings/general.ini");
+		drupal_set_message(t("File contents are set"),"status");
+		$contents = parse_ini_string($contents);
+		foreach($contents as $key => $value){
+			if($key=="location") continue;
 
-	$form['federate_address'] = array(
-		'#type' => 'textfield',
-		'#name' => 'federate_address',
-		'#title' => t('Federate address'),
-		'#default_value' => t(''),
-		'#size' => 100,
-		'#description' => "",
-		'#required' => true
-	);
-
-	$form['delete_federate'] = array(
-		'#type' => 'checkbox',
-		'#name' => 'federate_delete',
-		'#title' => t('Delete federate'),
-		'#default_value' => t(''),
-		'#size' => 100,
-		'#description' => "",
-		'#required' => false
-	);
-
-	return system_settings_form($form);
-}
-
-function collabrep_create_or_join_federation_validate($form, &$form_state)
-{
-	//echo $_POST["name"];
-	$name=(isset($_POST["federate_hostname"])?$_POST["federate_hostname"]:null);
-	$indirizzo=(isset($_POST["federate_address"])?$_POST["federate_address"]:null);
-	$delete=(isset($_POST["federate_delete"])?$_POST["federate_delete"]:null);
-
-	$con=mysqli_connect("localhost", "root","root", "dbunipg") or die ("errore connessione");
-
-	//Controllo se nome o indirizzo del federato sono già esistenti nel database e informo l'utente
-	$query1 = "SELECT * FROM `lo_federation` WHERE ServerName='" . $name . "'";
-	$query2= "SELECT * FROM `lo_federation` WHERE ServerAddress ='" . $indirizzo . "'";
-	$result1 = mysqli_query($con, $query1);
-	$result2= mysqli_query($con, $query2);
-	$row1 = mysqli_num_rows($result1);
-	$row2= mysqli_num_rows($result2);
-
-	if($row1>0)
-		echo "Nome già registrato,cambiare nome";
-	else{
-		if($row2>0)
-			echo "indirizzo già registrato,cabiare indirizzo";
-		else{
-			//nel caso nome o indirizzo non sono presenti,inserisco nel database il federato.
-			$query = "SELECT * FROM `lo_federation` WHERE ServerName='" . $name . "' and ServerAddress ='" . $indirizzo . "'";
-			$result = mysqli_query($con, $query);
-
-			/*if($row = mysqli_num_rows($result) != 0)
-			echo "Federato già registrato" ;
-
-			else{*/
-
-			$query="INSERT INTO `lo_federation`(`ServerName`, `ServerAddress`) VALUES (\"$name\",\"$indirizzo\")";
-			$res=mysqli_query($con,$query);
-			echo "Registrazione effettuata con successo $name ";
-			mysqli_close($con);
+			$form[$key] = array(
+				'#type' => 'textfield',
+				'#name' => $key,
+				'#title' => t($key),
+				'#default_value' => t($value),
+				'#size' => 100,
+				'#description' => "",
+				'#required' => false
+			);
 		}
+		$form['overwrite'] = array(
+			'#type' => 'button',
+			'#name' => 'overwrite',
+			'#title' => t('Overwrite'),
+			'#default_value' => t("Overwrite")
+		);
+		$form['reset'] = array(
+			'#type' => 'button',
+			'#name' => 'reset',
+			'#title' => t('Reset file'),
+			'#default_value' => t("Reset file")
+		);
+		$form['sync'] = array(
+			'#type' => 'button',
+			'#name' => 'sync',
+			'#title' => t('Sync'),
+			'#default_value' => t("Sync"),
+			'#suffix' => "<input style='width:100px;padding: 10px;' type='number' min='0' value='100' name='forced_limit'/>"
+		);
+		echo "<style>#edit-submit{display: none;}</style>";
+	}else{
+		echo "<style>#edit-submit{display: block;}</style>";
+		$form['gsio_location'] = array(
+			'#type' => 'textfield',
+			'#name' => 'gsio_location',
+			'#title' => t('Config filename'),
+			'#default_value' => t($gsio_location),
+			'#size' => 100,
+			'#description' => "This is the location of Glorep SyncIO (GSIO).",
+			'#required' => true
+		);
+		$form['init'] = array(
+			'#type' => 'checkbox',
+			'#name' => 'init',
+			'#title' => t('Init settings'),
+			'#default_value' => t("Init settings"),
+			'#size' => 100,
+			'#description' => "Checking this box will set the default values for daemon's settings.<br />You should only check this if the daemon has been recently installed.",
+			'#required' => false
+		);
 	}
+	return system_settings_form($form);
+}
+
+function collabrep_create_or_join_federation_validate($form, &$form_state){
+	//drupal_set_message(t("hello world: ".serialize($_POST)),"status");
+
+	if(isset($_POST["op"])){
+		if(isset($_POST["gsio_location"])){
+			if(file_exists($_POST["gsio_location"])){
+					variable_set("gsio_location",$_POST["gsio_location"]);
+					variable_set("need_to_set",false);
+					if(isset($_POST["init"])){
+						$tmp = "php ".$_POST["gsio_location"]."/init.php";
+						drupal_set_message(t("$tmp executed."),"status");
+						shell_exec($tmp);
+					}
+				drupal_set_message(t("File has been found"),"status");
+			}else{
+				drupal_set_message(t("Config file not found, try again."),"error");
+			}
+		}else{
+			drupal_set_message(t("Config file not found, try again."),"error");
+		}
+
+	}else if(isset($_POST["reset"])){
+		variable_set("need_to_set",true);
+		drupal_set_message(t("Config variables have been reset."),"status");
+	}else if(isset($_POST["sync"])){
+		$contents = parse_ini_string(file_get_contents(variable_get("gsio_location",null)."/settings/general.ini"));
+		$tmp = "php ".$contents["location"]."/utils/routine_request/force_sync.php".(isset($_POST["forced_limit"])?' '.$_POST["forced_limit"]:'');
+		drupal_set_message(t("$tmp executed."),"status");
+		shell_exec($tmp);
+	}else if(isset($_POST["overwrite"])){
+
+		//parse settings file
+		$general_ini=array();
+
+		$general_ini["location"] = variable_get("gsio_location",null);
+		$general_ini["federation_name"]=$_POST["federation_name"];
+		$general_ini["local_address"]=$_POST["local_address"];
+		$general_ini["local_username"]=$_POST["local_username"];
+		$general_ini["local_password"]=$_POST["local_password"];
+		$general_ini["local_database_name"]=$_POST["local_database_name"];
+		$general_ini["local_database_port"]=$_POST["local_database_port"];
+		$general_ini["upload_limit"]=$_POST["upload_limit"];
+		$general_ini["download_limit"]=$_POST["download_limit"];
+		$general_ini["update_limit"]=$_POST["update_limit"];
+
+		$general_ini["shared_address"]=$_POST["shared_address"];
+		$general_ini["shared_username"]=$_POST["shared_username"];
+		$general_ini["shared_password"]=$_POST["shared_password"];
+		$general_ini["shared_database_name"]=$_POST["shared_database_name"];
+		$general_ini["shared_database_port"]=$_POST["shared_database_port"];
+
+		$general_ini["listener_port"]=$_POST["listener_port"];
+		$general_ini["server_reader_mtu"]=$_POST["server_reader_mtu"];
+
+		$general_ini["sleep_time"]=$_POST["sleep_time"];
+		$handler = fopen($general_ini["location"]."/settings/general.ini", "w");
+		$tmp = "";
+		foreach($general_ini as $key => $value){
+			switch ($key) {
+				case 'location':
+					$tmp .=";################ Location of GSIO #########################\n";
+					break;
+				case 'federation_name':
+					$tmp .="\n\n\n\n;################ LOCAL SERVER DETAILS #####################\n";
+					break;
+				case 'shared_address':
+					$tmp .="\n\n\n\n;################# SHARED SERVER DETAILS ###################\n";
+					break;
+				case 'listener_port':
+					$tmp .="\n\n\n\n;################# CLIENT LISTENER DETAILS #################\n";
+					break;
+				case 'sleep_time':
+					$tmp .="\n\n\n\n;################# GENERIC DETAILS #########################\n";
+					$tmp .=";sleep time of the routine (in seconds)\n";
+					break;
+			}
+
+			$tmp .="$key = $value\n";
+
+		}
+		fwrite($handler, $tmp);
+		fclose($handler);
+	}
+
 }

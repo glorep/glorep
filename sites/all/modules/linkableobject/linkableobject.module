@@ -1012,7 +1012,6 @@ function linkableobject_insert($node)
 				$url= file_create_url($uri);
 				$res2=db_query("INSERT INTO LO_File (Id_Lo,Id_Fd,url,filename,filesize,filemime) VALUES ($node->vid,'$lobj_tfuid','$url','$filename','$filesize','$filemime')");
 			}
-			variable_set('test','');
 }
 
 function linkableobject_update($node)
