@@ -1008,7 +1008,6 @@ function linkableobject_insert($node)
 				$filename= $row["filename"];
 				$filemime= $row["filemime"];
 				$filesize=$row["filesize"];
-				drupal_set_message("NOME ".$filename);
 				$url= file_create_url($uri);
 				$res2=db_query("INSERT INTO LO_File (Id_Lo,Id_Fd,url,filename,filesize,filemime) VALUES ($node->vid,'$lobj_tfuid','$url','$filename','$filesize','$filemime')");
 			}
@@ -1140,6 +1139,26 @@ function linkableobject_update($node)
 		}
 	}*/
 
+
+	drupal_set_message("File updated:".$node->vid,"status");
+
+
+	$f =db_query("SELECT fid  FROM file_usage WHERE id =".$node->vid);
+	$f=$f->fetch(PDO::FETCH_ASSOC);
+	$tmp_file =db_query("SELECT *  FROM file_managed WHERE fid =".$f["fid"]);
+	$tmp_file=$tmp_file->fetch(PDO::FETCH_ASSOC);
+	//Updating LO_File
+	db_update('LO_File')
+		->fields(array(
+				'url'=>file_create_url($tmp_file["uri"]),
+				'filename'=>$tmp_file["filename"],
+				'filesize'=>$tmp_file["filesize"],
+				'filemime'=>$tmp_file["filemime"]
+				)
+			)
+		->condition('Id_Fd',$tmp->Id_Fd)
+		->condition('Id_Lo',$node->vid)
+		->execute();
 	//Updating LO_Educational
 	db_update('LO_Educational')
 		->fields(array(
