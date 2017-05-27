@@ -199,6 +199,14 @@ function collabrep_menu()
 			'access arguments' => array('collabrep edit settings'),
 			'type' => MENU_DEFAULT_LOCAL_TASK,
 		);
+		$items['admin/settings/collabrep/Logger'] = array(
+			'title' => 'GSIO Logger',
+			'description' => 'GSIO Logger',
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array('collabrep_logger'),
+			'access arguments' => array('collabrep edit settings'),
+			'type' => MENU_NORMAL_ITEM,
+		);
 	return $items;
 }
 
@@ -211,6 +219,68 @@ function federation_management()
 	return system_settings_form($form);
 }
 
+function collabrep_logger(){
+	$form=array();
+	$gsio_location=variable_get("gsio_location",null);
+	$need_to_set=variable_get("need_to_set",null);
+
+	if(is_null($gsio_location)|| is_null($need_to_set) | $need_to_set){
+		//header("Location: ?q=admin/settings/collabrep/Management");
+	}
+
+	$logs = scandir("$gsio_location/utils/logs/");
+	$max = 0;
+	$tmp_array = array();
+	if(count($logs)>2){
+		foreach($logs as $filename){
+			if($filename !="." && $filename !=".."){
+				$tmp = explode(".", $filename);
+				$tmp_array[] = $tmp[0];
+			}
+		}
+		$form['go_management'] = array(
+			'#type' => 'button',
+			'#name' => 'go_management',
+			'#title' => t('Federation Management'),
+			'#default_value' => t("Federation Management")
+		);
+
+		foreach($tmp_array as $filename){
+
+			$form[$filename] = array(
+
+		  '#type' => 'fieldset',
+
+		  '#title' => t(date("r",$filename)),
+
+		  '#weight' => 5,
+
+		  '#collapsible' => TRUE,
+
+		  '#collapsed' => TRUE,
+			'#description' => "<textarea rows=100>".file_get_contents("$gsio_location/utils/logs/$filename.log")."</textarea>"
+
+		);
+		}
+
+		/**/
+		echo "<style>
+			#edit-submit{display: none;}
+
+		</style>";
+	}else {
+		drupal_set_message("No log files have been found.","warning");
+		drupal_goto("admin/settings/collabrep/Management");
+	}
+	return system_settings_form($form);
+}
+
+function collabrep_logger_validate(){
+	if(isset($_POST["go_management"])){
+		drupal_goto("admin/settings/collabrep/Management");
+	}
+}
+
 
 function collabrep_create_or_join_federation(){
 	$form = array();
@@ -218,6 +288,12 @@ function collabrep_create_or_join_federation(){
 	$need_to_set=variable_get("need_to_set",null);
 
 	if(!is_null($need_to_set) && $need_to_set != true){
+		$form['read_logger'] = array(
+			'#type' => 'button',
+			'#name' => 'read_logger',
+			'#title' => t('Read Logger'),
+			'#default_value' => t("Read Logger")
+		);
 		$contents=file_get_contents("$gsio_location/settings/general.ini");
 		$contents = parse_ini_string($contents);
 		foreach($contents as $key => $value){
@@ -278,8 +354,9 @@ function collabrep_create_or_join_federation(){
 }
 
 function collabrep_create_or_join_federation_validate($form, &$form_state){
-
-	if(isset($_POST["op"])){
+	if(isset($_POST["read_logger"])){
+		drupal_goto("admin/settings/collabrep/Logger");
+	}else if(isset($_POST["op"])){
 		if(isset($_POST["gsio_location"])){
 			if(file_exists($_POST["gsio_location"])){
 					variable_set("gsio_location",$_POST["gsio_location"]);
@@ -299,12 +376,12 @@ function collabrep_create_or_join_federation_validate($form, &$form_state){
 
 	}else if(isset($_POST["reset"])){
 		variable_set("need_to_set",true);
-		drupal_set_message(t("Config variables have been reset."),"status");
+		drupal_set_message(t("GSIO config variables have been reinitialized."),"status");
 	}else if(isset($_POST["sync"])){
 		$contents = parse_ini_string(file_get_contents(variable_get("gsio_location",null)."/settings/general.ini"));
 		$tmp = "php ".$contents["location"]."/utils/routine_request/force_sync.php".(isset($_POST["forced_limit"])?' '.$_POST["forced_limit"]:'');
 		$result = shell_exec($tmp);
-		drupal_set_message("Return message:".(trim($result)==""?"Sync executed (limit ".$_POST["forced_limit"].").":$result),"warning");
+		drupal_set_message("Return message:<br /><pre>".(trim($result)==""?"Sync executed (limit ".$_POST["forced_limit"].").":$result)."</pre>","warning");
 	}else if(isset($_POST["overwrite"])){
 
 		//parse settings file
