@@ -303,8 +303,8 @@ function collabrep_create_or_join_federation_validate($form, &$form_state){
 	}else if(isset($_POST["sync"])){
 		$contents = parse_ini_string(file_get_contents(variable_get("gsio_location",null)."/settings/general.ini"));
 		$tmp = "php ".$contents["location"]."/utils/routine_request/force_sync.php".(isset($_POST["forced_limit"])?' '.$_POST["forced_limit"]:'');
-		drupal_set_message(t("$tmp executed."),"status");
-		shell_exec($tmp);
+		$result = shell_exec($tmp);
+		drupal_set_message("Return message:".(trim($result)==""?"Sync executed (limit ".$_POST["forced_limit"].").":$result),"warning");
 	}else if(isset($_POST["overwrite"])){
 
 		//parse settings file
@@ -317,8 +317,10 @@ function collabrep_create_or_join_federation_validate($form, &$form_state){
 		$general_ini["local_password"]=$_POST["local_password"];
 		$general_ini["local_database_name"]=$_POST["local_database_name"];
 		$general_ini["local_database_port"]=$_POST["local_database_port"];
+
 		$local_db = mysqli_connect($_POST["local_address"],$_POST["local_username"],$_POST["local_password"],$_POST["local_database_name"],$_POST["local_database_port"]);
 		$local_db->query("ALTER TABLE `node` CHANGE COLUMN `Id_Fd` `Id_Fd` VARCHAR(255) NOT NULL DEFAULT '".$_POST["federation_name"]."'");
+
 		$general_ini["upload_limit"]=$_POST["upload_limit"];
 		$general_ini["download_limit"]=$_POST["download_limit"];
 		$general_ini["update_limit"]=$_POST["update_limit"];
