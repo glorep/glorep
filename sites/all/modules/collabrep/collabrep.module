@@ -258,7 +258,7 @@ function collabrep_logger(){
 		  '#collapsible' => TRUE,
 
 		  '#collapsed' => TRUE,
-			'#description' => "<textarea rows=100>".file_get_contents("$gsio_location/utils/logs/$filename.log")."</textarea>"
+			'#description' => "<textarea style=\"width: 100%\" rows=25>".file_get_contents("$gsio_location/utils/logs/$filename.log")."</textarea>"
 
 		);
 		}
@@ -379,7 +379,7 @@ function collabrep_create_or_join_federation_validate($form, &$form_state){
 		drupal_set_message(t("GSIO config variables have been reinitialized."),"status");
 	}else if(isset($_POST["sync"])){
 		$contents = parse_ini_string(file_get_contents(variable_get("gsio_location",null)."/settings/general.ini"));
-		$tmp = "php ".$contents["location"]."/utils/routine_request/force_sync.php".(isset($_POST["forced_limit"])?' '.$_POST["forced_limit"]:'');
+		$tmp = "php7.0-zts ".$contents["location"]."/utils/routine_request/force_sync.php".(isset($_POST["forced_limit"])?' '.$_POST["forced_limit"]:'');
 		$result = shell_exec($tmp);
 		drupal_set_message("Return message:<br /><pre>".(trim($result)==""?"Sync executed (limit ".$_POST["forced_limit"].").":$result)."</pre>","warning");
 	}else if(isset($_POST["overwrite"])){
