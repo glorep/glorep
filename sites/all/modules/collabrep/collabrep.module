@@ -234,7 +234,7 @@ function collabrep_logger(){
 	if(count($logs)>2){
 		foreach($logs as $filename){
 			if($filename !="." && $filename !=".."){
-				$tmp = explode(".", $filename);
+				$tmp = explode("_", $filename);
 				$tmp_array[] = $tmp[0];
 			}
 		}
@@ -245,20 +245,34 @@ function collabrep_logger(){
 			'#default_value' => t("Federation Management")
 		);
 
-		foreach($tmp_array as $filename){
+		foreach($tmp_array as $dirname){
 
-			$form[$filename] = array(
+			$logs = scandir("$gsio_location/utils/logs/$dirname"."_log/");
+			$tmp="";
+			$cnt = count($logs);
+			for($i=0;$i<$cnt;$i++){
+				if($cnt > 5){
+					$i=$cnt-1;
+					$tmp .="\n/*\n*\n*\n*\tThis log object is too large, loading the most recent piece only.\n*\n*\n*/";
+				}
+				if($logs[$i] !="." && $logs[$i] !=".."){
+					$tmp .="\n:::::::::::::::::::::::READING A NEW FILE::::::::::::::::::::::";
+					$tmp .="\n".file_get_contents("$gsio_location/utils/logs/$dirname"."_log/".$logs[$i]);
+				}
+			}
+
+			$form[$dirname] = array(
 
 		  '#type' => 'fieldset',
 
-		  '#title' => t(date("r",$filename)),
+		  '#title' => t(date("r",$dirname)),
 
 		  '#weight' => 5,
 
 		  '#collapsible' => TRUE,
 
 		  '#collapsed' => TRUE,
-			'#description' => "<textarea style=\"width: 100%\" rows=25>".file_get_contents("$gsio_location/utils/logs/$filename.log")."</textarea>"
+			'#description' => "<textarea style=\"width: 100%\" rows=25>$tmp</textarea>"
 
 		);
 		}
