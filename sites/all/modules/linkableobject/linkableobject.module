@@ -1015,8 +1015,9 @@ function linkableobject_insert($node)
 
 function linkableobject_update($node)
 {
-	$lobj_tfuid=variable_get('collabrep_federation_name', 'NOFEDERATION').' '.variable_get('collabrep_my_name', substr(preg_replace('[^A-Za-z0-9]','',variable_get('site_name', "")),0,20)).' '.$node->nid;
+	//$lobj_tfuid=variable_get('collabrep_federation_name', 'NOFEDERATION').' '.variable_get('collabrep_my_name', substr(preg_replace('[^A-Za-z0-9]','',variable_get('site_name', "")),0,20)).' '.$node->nid;
 	$tmp=db_query("select vid,Id_Fd from {node} where nid=:node_id",array(":node_id"=>$node->nid))->fetchObject();
+	$lobj_tfuid=$tmp->Id_Fd;
 	//Updating LO_General
 	db_update('LO_General')
 		->fields(array(
@@ -1042,9 +1043,9 @@ function linkableobject_update($node)
 			if(!empty($_POST[$var])){
 				db_update('LO_category')
 				->fields(array(
-					'Id_LO'=>$node->nid,
-					'Categoria_LO'=>$_POST[$var],
-					'Id_Fd'=>$lobj_tfuid,
+					//'Id_LO'=>$node->nid,
+					'Categoria_LO'=>$_POST[$var]
+					//'Id_Fd'=>$lobj_tfuid,
 				))
 				->condition('Id_Fd',$tmp->Id_Fd)
 				->condition('Id_Lo',$node->vid)
@@ -1052,9 +1053,9 @@ function linkableobject_update($node)
 			}elseif(!empty($_POST[$var2])){
 				db_update('LO_category')
 				->fields(array(
-					'Id_LO'=>$node->vid,
-					'Categoria_LO'=>$_POST[$var2],
-					'Id_Fd'=>$lobj_tfuid,
+					//'Id_LO'=>$node->vid,
+					'Categoria_LO'=>$_POST[$var2]
+					//'Id_Fd'=>$lobj_tfuid,
 				))
 				->condition('Id_Fd',$tmp->Id_Fd)
 				->condition('Id_Lo',$node->vid)
